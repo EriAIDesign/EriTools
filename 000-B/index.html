@@ -1,1 +1,630 @@
-<h1>#000</h1>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="1日1ツール開発のためのお題メーカー">
+  <meta name="theme-color" content="#f1efea">
+  <title>EriTools #000 — お題メーカー</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f1efea;
+      --ink: #171815;
+      --muted: #707069;
+      --line: #c9c7c0;
+      --signal: #ff4d00;
+      --signal-dark: #d94100;
+      --card: rgba(255, 255, 255, 0.48);
+      --shadow: 0 24px 70px rgba(30, 28, 23, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--paper);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, transparent 49.9%, rgba(23, 24, 21, 0.035) 50%, transparent 50.1%),
+        radial-gradient(circle at 82% 10%, rgba(255, 77, 0, 0.1), transparent 26%),
+        var(--paper);
+      font-family: "Helvetica Neue", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 48px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 30px 0 28px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 28px;
+    }
+
+    .masthead,
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 12px;
+      height: 12px;
+      background: var(--signal);
+      border-radius: 50%;
+      box-shadow: 18px 0 0 var(--ink);
+      margin-right: 18px;
+    }
+
+    .issue,
+    .footer {
+      color: var(--muted);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(250px, 0.72fr) minmax(480px, 1.28fr);
+      gap: clamp(30px, 6vw, 92px);
+      align-items: center;
+    }
+
+    .intro {
+      align-self: stretch;
+      padding: clamp(24px, 6vh, 72px) 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 56px;
+    }
+
+    .eyebrow {
+      margin: 0 0 24px;
+      color: var(--signal);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    h1 {
+      max-width: 7em;
+      margin: 0;
+      font-family: "Arial Black", "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif;
+      font-size: clamp(52px, 7vw, 96px);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
+    }
+
+    .lead {
+      max-width: 28em;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .draw-button {
+      width: 100%;
+      min-height: 68px;
+      padding: 0 24px;
+      border: 1px solid var(--ink);
+      border-radius: 0;
+      color: var(--paper);
+      background: var(--ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .draw-button:hover:not(:disabled) {
+      background: var(--signal);
+      border-color: var(--signal);
+      transform: translateY(-2px);
+    }
+
+    .draw-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .draw-button:focus-visible,
+    .copy-button:focus-visible {
+      outline: 3px solid var(--signal);
+      outline-offset: 4px;
+    }
+
+    .draw-button:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
+    .draw-arrow {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .result-card {
+      position: relative;
+      min-height: 610px;
+      padding: clamp(28px, 5vw, 58px);
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 34px;
+      overflow: hidden;
+    }
+
+    .result-card::after {
+      content: "";
+      position: absolute;
+      top: -90px;
+      right: -90px;
+      width: 180px;
+      height: 180px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+    }
+
+    .result-card.is-boss {
+      --card: rgba(29, 23, 20, 0.97);
+      --ink: #f5f0e8;
+      --muted: #bbb3a7;
+      --line: #554941;
+      color: var(--ink);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .number {
+      font-family: "Arial Black", "Helvetica Neue", sans-serif;
+      font-size: clamp(35px, 5vw, 58px);
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .boss-badge {
+      min-width: 82px;
+      padding: 9px 12px;
+      border: 1px solid var(--signal);
+      color: var(--signal);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .is-boss .boss-badge {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slots {
+      display: grid;
+      align-content: center;
+      gap: 0;
+    }
+
+    .slot {
+      padding: 20px 0;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
+      align-items: baseline;
+    }
+
+    .slot:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .slot-label {
+      color: var(--muted);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .slot-value {
+      font-size: clamp(17px, 2vw, 23px);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .slot-code {
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-size: 0.72em;
+      letter-spacing: 0.04em;
+    }
+
+    .placeholder {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .copy-button {
+      justify-self: end;
+      padding: 12px 0 8px;
+      border: 0;
+      border-bottom: 1px solid currentColor;
+      color: var(--ink);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      transition: color 160ms ease;
+    }
+
+    .copy-button:hover:not(:disabled) {
+      color: var(--signal);
+    }
+
+    .copy-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 0;
+      color: var(--signal-dark);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer span:last-child {
+      text-align: right;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slot-value.reveal {
+      animation: reveal 260ms ease both;
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        width: min(100% - 30px, 640px);
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .intro {
+        padding: 30px 0 16px;
+        gap: 34px;
+      }
+
+      h1 {
+        max-width: none;
+        font-size: clamp(54px, 17vw, 84px);
+      }
+
+      .lead {
+        margin-top: 18px;
+      }
+
+      .result-card {
+        min-height: 560px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .page {
+        width: calc(100% - 24px);
+        padding-top: 20px;
+      }
+
+      .issue {
+        display: none;
+      }
+
+      .result-card {
+        min-height: 525px;
+        padding: 26px 22px;
+      }
+
+      .slot {
+        grid-template-columns: 86px 1fr;
+        gap: 12px;
+      }
+
+      .footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .footer span:last-child {
+        text-align: left;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>EriTools</span>
+      </div>
+      <span class="issue">Daily Tool Prompt / 000</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">ONE DAY / ONE TOOL</p>
+          <h1 id="page-title">お題<br>メーカー</h1>
+          <p class="lead">4枚のカードが、今日作るものの輪郭を決める。考えすぎる前に引いて、まず手を動かそう。</p>
+        </div>
+
+        <div>
+          <button class="draw-button" id="drawButton" type="button" disabled>
+            <span id="drawLabel">DECK LOADING...</span>
+            <span class="draw-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="result-card" id="resultCard" aria-label="抽選結果" aria-live="polite">
+        <div class="card-head">
+          <span class="number">#001</span>
+          <span class="boss-badge">BOSS</span>
+        </div>
+
+        <div class="slots">
+          <div class="slot">
+            <span class="slot-label">MODE</span>
+            <span class="slot-value placeholder" id="modeValue">カードを引いて決める</span>
+          </div>
+          <div class="slot">
+            <span class="slot-label">MATERIAL</span>
+            <span class="slot-value placeholder" id="materialValue">—</span>
+          </div>
+          <div class="slot">
+            <span class="slot-label">LENS</span>
+            <span class="slot-value placeholder" id="lensValue">—</span>
+          </div>
+          <div class="slot">
+            <span class="slot-label">BAN</span>
+            <span class="slot-value placeholder" id="banValue">—</span>
+          </div>
+        </div>
+
+        <button class="copy-button" id="copyButton" type="button" disabled>COPY PROMPT</button>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Make small. Ship today.</span>
+      <span>No save / No history / Just build.</span>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DECK_PATH = "../deck.json";
+      const elements = {
+        drawButton: document.querySelector("#drawButton"),
+        drawLabel: document.querySelector("#drawLabel"),
+        copyButton: document.querySelector("#copyButton"),
+        resultCard: document.querySelector("#resultCard"),
+        status: document.querySelector("#status"),
+        mode: document.querySelector("#modeValue"),
+        material: document.querySelector("#materialValue"),
+        lens: document.querySelector("#lensValue"),
+        ban: document.querySelector("#banValue")
+      };
+
+      let deck = null;
+      let currentPrompt = "";
+
+      const randomIndex = (length) => {
+        if (!Number.isSafeInteger(length) || length <= 0) {
+          throw new Error("抽選できるカードがありません");
+        }
+
+        const range = 0x100000000;
+        const limit = range - (range % length);
+        const values = new Uint32Array(1);
+        do {
+          crypto.getRandomValues(values);
+        } while (values[0] >= limit);
+        return values[0] % length;
+      };
+
+      const pick = (cards) => cards[randomIndex(cards.length)];
+      const chance = (rate) => {
+        const values = new Uint32Array(1);
+        crypto.getRandomValues(values);
+        return values[0] / 0x100000000 < rate;
+      };
+
+      const assertDeck = (data) => {
+        const requiredArrays = ["modes", "materials", "lenses", "bans", "curses"];
+        const isValid = data
+          && requiredArrays.every((key) => Array.isArray(data[key]) && data[key].length > 0)
+          && typeof data.bossRate === "number"
+          && data.bossRate >= 0
+          && data.bossRate <= 1;
+
+        if (!isValid) {
+          throw new Error("deck.json の形式が正しくありません");
+        }
+        return data;
+      };
+
+      const formatCard = (card) => {
+        if (typeof card === "string") return card;
+        return `${card.code} — ${card.label}`;
+      };
+
+      const renderValue = (element, card) => {
+        element.classList.remove("placeholder", "reveal");
+        element.textContent = "";
+
+        if (typeof card === "string") {
+          element.textContent = card;
+        } else {
+          const code = document.createElement("span");
+          code.className = "slot-code";
+          code.textContent = card.code;
+          element.append(code, document.createTextNode(` — ${card.label}`));
+        }
+
+        void element.offsetWidth;
+        element.classList.add("reveal");
+      };
+
+      const draw = () => {
+        const isBoss = chance(deck.bossRate);
+        const result = {
+          mode: pick(deck.modes),
+          material: pick(deck.materials),
+          lens: pick(deck.lenses),
+          ban: pick(isBoss ? deck.curses : deck.bans)
+        };
+
+        elements.resultCard.classList.toggle("is-boss", isBoss);
+        renderValue(elements.mode, result.mode);
+        renderValue(elements.material, result.material);
+        renderValue(elements.lens, result.lens);
+        renderValue(elements.ban, result.ban);
+
+        currentPrompt = [
+          isBoss ? "#001 — BOSS" : "#001",
+          "",
+          "MODE:",
+          formatCard(result.mode),
+          "",
+          "MATERIAL:",
+          formatCard(result.material),
+          "",
+          "LENS:",
+          formatCard(result.lens),
+          "",
+          isBoss ? "BAN / CURSE:" : "BAN:",
+          formatCard(result.ban)
+        ].join("\n");
+
+        elements.copyButton.disabled = false;
+        elements.drawLabel.textContent = "DRAW AGAIN";
+        elements.status.textContent = isBoss ? "BOSS出現。今日は逃げ道なし。" : "";
+      };
+
+      const copyPrompt = async () => {
+        if (!currentPrompt) return;
+
+        try {
+          await navigator.clipboard.writeText(currentPrompt);
+        } catch {
+          const selection = document.createElement("textarea");
+          selection.value = currentPrompt;
+          selection.setAttribute("readonly", "");
+          selection.style.position = "fixed";
+          selection.style.opacity = "0";
+          document.body.append(selection);
+          selection.select();
+          const copied = document.execCommand("copy");
+          selection.remove();
+          if (!copied) throw new Error("copy failed");
+        }
+
+        elements.copyButton.textContent = "COPIED";
+        window.setTimeout(() => {
+          elements.copyButton.textContent = "COPY PROMPT";
+        }, 1400);
+      };
+
+      const loadDeck = async () => {
+        try {
+          const response = await fetch(DECK_PATH, { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          deck = assertDeck(await response.json());
+          elements.drawButton.disabled = false;
+          elements.drawLabel.textContent = "DRAW TODAY'S PROMPT";
+        } catch (error) {
+          console.error(error);
+          elements.drawLabel.textContent = "DECK NOT FOUND";
+          elements.status.textContent = "deck.jsonを読み込めなかった。Webサーバー経由で開いてね。";
+        }
+      };
+
+      elements.drawButton.addEventListener("click", draw);
+      elements.copyButton.addEventListener("click", copyPrompt);
+      loadDeck();
+    })();
+  </script>
+</body>
+</html>
