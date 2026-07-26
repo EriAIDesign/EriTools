@@ -210,14 +210,8 @@
       gap: 20px;
     }
 
-    .number {
-      font-family: "Arial Black", "Helvetica Neue", sans-serif;
-      font-size: clamp(35px, 5vw, 58px);
-      line-height: 1;
-      letter-spacing: -0.06em;
-    }
-
     .boss-badge {
+      margin-left: auto;
       min-width: 82px;
       padding: 9px 12px;
       border: 1px solid var(--signal);
@@ -435,7 +429,6 @@
 
       <section class="result-card" id="resultCard" aria-label="抽選結果" aria-live="polite">
         <div class="card-head">
-          <span class="number">#001</span>
           <span class="boss-badge">BOSS</span>
         </div>
 
@@ -565,6 +558,8 @@
         return `${card.code} — ${card.label}`;
       };
 
+      const formatBan = (ban) => `${ban.replace(/\s*禁止\s*$/, "")} 禁止`;
+
       const renderValue = (element, card) => {
         element.classList.remove("placeholder", "reveal");
         element.textContent = "";
@@ -591,7 +586,7 @@
           mode: pick(deck.modes),
           material: pick(deck.materials),
           lens: pick(deck.lenses),
-          ban: pick(isBoss ? deck.curses : deck.bans)
+          ban: formatBan(pick(isBoss ? deck.curses : deck.bans))
         };
 
         elements.resultCard.classList.toggle("is-boss", isBoss);
