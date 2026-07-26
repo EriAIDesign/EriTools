@@ -1,0 +1,87 @@
+{
+  "version": "0.1",
+  "note": "EriTools / 1日1ツール開発 お題デッキ。IMPLEMENTATIONは抽選対象外（結果として記録するのみ）。",
+
+  "mode": [
+    { "id": "BUILD",    "label": "ゼロから作る" },
+    { "id": "REVERSE",  "label": "UXゴールからUIを逆算する" },
+    { "id": "READ",     "label": "UIからUXを読む（読解ゲームとして実装）" },
+    { "id": "BREAK",    "label": "定石をひとつ壊す" },
+    { "id": "REDESIGN", "label": "既存の構造を別解にする" },
+    { "id": "REMIX",    "label": "過去作を別条件で再構成する" },
+    { "id": "SILLY",    "label": "しょうもない問題を全力で解く" }
+  ],
+
+  "material": [
+    "時間", "日付", "順番", "選択肢", "進捗", "リスト",
+    "文章", "数字", "色", "名前", "気分", "記憶"
+  ],
+
+  "lens": [
+    { "group": "SENSE",        "card": "音だけ" },
+    { "group": "SENSE",        "card": "動きだけ" },
+    { "group": "SENSE",        "card": "視線誘導だけ" },
+    { "group": "SENSE",        "card": "余白だけ" },
+
+    { "group": "OTHERS",       "card": "片手しか使えない" },
+    { "group": "OTHERS",       "card": "急いでいる（3秒で判断）" },
+    { "group": "OTHERS",       "card": "初見・説明を読まない" },
+    { "group": "OTHERS",       "card": "見えにくい" },
+    { "group": "OTHERS",       "card": "100回目のユーザー" },
+    { "group": "OTHERS",       "card": "疲れて注意力が落ちてる" },
+
+    { "group": "MESS",         "card": "重複・表記揺れがある（正規化禁止）" },
+    { "group": "MESS",         "card": "欠損がある" },
+    { "group": "MESS",         "card": "順不同" },
+    { "group": "MESS",         "card": "壊れた状態から始まる" },
+
+    { "group": "INTERRUPTION", "card": "途中で離脱する" },
+    { "group": "INTERRUPTION", "card": "中断から戻ってくる" },
+    { "group": "INTERRUPTION", "card": "複数日にまたがる" },
+
+    { "group": "UNCERTAINTY",  "card": "正解がない" },
+    { "group": "UNCERTAINTY",  "card": "情報不足のまま決める" },
+    { "group": "UNCERTAINTY",  "card": "後から前提が変わる" },
+
+    { "group": "SCALE",        "card": "100件ある" },
+    { "group": "SCALE",        "card": "1件しかない" },
+    { "group": "SCALE",        "card": "増え続ける" },
+
+    { "group": "NONE",         "card": "素直に作る" }
+  ],
+
+  "ban": [
+    "テキスト", "ボタン", "色", "数字", "スクロール",
+    "入力欄", "ラベル・説明文", "アイコン", "モーダル",
+    "即時フィードバック", "保存（状態を持たない）", "元に戻す",
+    "複数画面（1画面のみ）", "アニメーション", "確認", "削除", "並べ替え"
+  ],
+
+  "curse": [
+    "整列",
+    "均等余白",
+    "一貫したサイズ",
+    "同じ色の再使用",
+    "グリッド"
+  ],
+
+  "protocol": [
+    { "id": "baseline",   "label": "いつも通り（基準線・第1ブロック固定）" },
+    { "id": "short",      "label": "要件は10行以内で渡す" },
+    { "id": "first-take", "label": "最初の実装案を一発採用する" },
+    { "id": "dual",       "label": "AI 2体に別々に設計させてから統合する" },
+    { "id": "worst",      "label": "AIに3案出させ、一番嫌いな案を採用する" },
+    { "id": "hands-off",  "label": "コードを人間が直接触らない" },
+    { "id": "fail-first", "label": "実装前に失敗パターンだけ出させる" },
+    { "id": "swap",       "label": "途中で一度モデルを交代する" }
+  ],
+
+  "rules": {
+    "boss_every": 7,
+    "boss_deck": "curse",
+    "protocol_block_days": 7,
+    "material_repeat": true,
+    "lens_ban_cooldown": 3,
+    "reroll": "破綻している1スロットのみ交換可。難易度理由の引き直しは不可。難易度を上げる追加は自由。"
+  }
+}
