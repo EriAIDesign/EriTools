@@ -1,1 +1,159 @@
-<h1>#000</h1>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#000 お題生成器 — EriTools</title>
+<style>
+  :root{
+    --paper:#faf8f5; --ink:#1c1a17; --sub:#8a837a; --line:#ddd6cc; --accent:#b2452f;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
+    --jp:"Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 20px 64px;background:var(--paper);color:var(--ink);
+       font-family:var(--jp);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:680px;margin:0 auto}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:26px}
+  h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em}
+  h1 span{color:var(--sub);font-weight:400}
+
+  .bar{display:flex;gap:10px;margin-bottom:26px}
+  #draw{flex:1;border:none;border-radius:2px;background:var(--ink);color:var(--paper);
+        font-family:var(--jp);font-size:14px;font-weight:600;letter-spacing:.3em;
+        padding:14px 0;cursor:pointer}
+  #draw:hover{opacity:.82}
+  #draw:disabled{opacity:.25;cursor:default}
+
+  .boss-flag{display:none;border:1px solid var(--accent);color:var(--accent);
+             font-family:var(--mono);font-size:11px;letter-spacing:.18em;padding:8px 12px;margin-bottom:16px}
+  body.boss .boss-flag{display:block}
+
+  .cards{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .card{background:#fff;padding:15px 18px;display:flex;align-items:baseline;gap:14px}
+  .k{flex:0 0 82px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--sub);padding-top:3px}
+  .v{flex:1;font-size:17px;line-height:1.5}
+  .v small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--sub);margin-bottom:3px}
+  .rr{flex:0 0 auto;border:none;background:none;color:var(--line);font-size:14px;cursor:pointer;padding:2px 4px}
+  .rr:hover{color:var(--sub)}
+  body.boss .card[data-slot="ban"]{background:#fdf6f4}
+  body.boss .card[data-slot="ban"] .v{color:var(--accent)}
+  .idle .v{color:var(--line)}
+
+  .out{margin-top:28px;display:none}
+  body.drawn .out{display:block}
+  .out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .out-head span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--sub)}
+  #copy{border:1px solid var(--line);background:#fff;color:var(--ink);font-family:var(--jp);
+        font-size:12px;padding:6px 14px;border-radius:2px;cursor:pointer}
+  #copy:hover{border-color:var(--sub)}
+  #out{width:100%;height:130px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.8;
+       border:1px solid var(--line);border-radius:2px;background:#fff;color:var(--ink);resize:vertical}
+
+  .err{display:none;border:1px solid var(--accent);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--accent)}
+  body.err .err{display:block}
+  body.err .bar,body.err .cards{display:none}
+</style>
+</head>
+<body class="idle">
+<div class="wrap">
+
+  <header><h1>#000 お題生成器 <span>— EriTools</span></h1></header>
+
+  <div class="err">
+    deck.json を読み込めなかった。<br>
+    GitHub Pages 上で開くか、下から deck.json を選択して。
+    <input type="file" id="deckfile" accept=".json" style="display:block;margin-top:12px;font-size:12px">
+  </div>
+
+  <div class="bar">
+    <button id="draw" disabled>引 く</button>
+  </div>
+
+  <div class="boss-flag">BOSS — 呪い札</div>
+
+  <div class="cards">
+    <div class="card" data-slot="mode"><div class="k">MODE</div><div class="v">—</div><button class="rr">↻</button></div>
+    <div class="card" data-slot="material"><div class="k">MATERIAL</div><div class="v">—</div><button class="rr">↻</button></div>
+    <div class="card" data-slot="lens"><div class="k">LENS</div><div class="v">—</div><button class="rr">↻</button></div>
+    <div class="card" data-slot="ban"><div class="k">BAN</div><div class="v">—</div><button class="rr">↻</button></div>
+  </div>
+
+  <div class="out">
+    <div class="out-head"><span>COPY</span><button id="copy">コピー</button></div>
+    <textarea id="out" spellcheck="false"></textarea>
+  </div>
+
+</div>
+
+<script>
+let deck = null, cur = null;
+const $ = s => document.querySelector(s);
+const body = document.body;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+function draw(){
+  const boss = Math.random() < 1 / deck.rules.boss_every;
+  cur = {
+    boss,
+    mode: pick(deck.mode),
+    material: pick(deck.material),
+    lens: pick(deck.lens),
+    ban: pick(boss ? deck.curse : deck.ban)
+  };
+  render();
+}
+
+function reroll(slot){
+  if(!cur) return;
+  if(slot === 'mode') cur.mode = pick(deck.mode);
+  if(slot === 'material') cur.material = pick(deck.material);
+  if(slot === 'lens') cur.lens = pick(deck.lens);
+  if(slot === 'ban') cur.ban = pick(cur.boss ? deck.curse : deck.ban);
+  render();
+}
+
+function set(slot, html){ document.querySelector('.card[data-slot="'+slot+'"] .v').innerHTML = html; }
+
+function render(){
+  body.classList.remove('idle');
+  body.classList.add('drawn');
+  body.classList.toggle('boss', cur.boss);
+
+  set('mode', '<small>'+cur.mode.id+'</small>'+cur.mode.label);
+  set('material', cur.material);
+  set('lens', '<small>'+cur.lens.group+'</small>'+cur.lens.card);
+  set('ban', cur.ban + ' \u7981\u6b62');
+
+  $('#out').value =
+    (cur.boss ? '[BOSS]\n' : '') +
+    'MODE     : ' + cur.mode.id + ' \u2014 ' + cur.mode.label + '\n' +
+    'MATERIAL : ' + cur.material + '\n' +
+    'LENS     : ' + cur.lens.group + ' \u2014 ' + cur.lens.card + '\n' +
+    'BAN      : ' + cur.ban + ' \u7981\u6b62';
+}
+
+function boot(d){ deck = d; $('#draw').disabled = false; body.classList.remove('err'); }
+
+fetch('../deck.json').then(r => r.ok ? r.json() : Promise.reject()).then(boot)
+  .catch(() => body.classList.add('err'));
+
+$('#deckfile').addEventListener('change', e => {
+  const f = e.target.files[0]; if(!f) return;
+  f.text().then(t => boot(JSON.parse(t))).catch(() => alert('読めなかった'));
+});
+
+$('#draw').addEventListener('click', draw);
+document.querySelectorAll('.rr').forEach(b =>
+  b.addEventListener('click', () => reroll(b.closest('.card').dataset.slot)));
+
+$('#copy').addEventListener('click', () => {
+  const t = $('#out');
+  navigator.clipboard.writeText(t.value)
+    .then(() => { $('#copy').textContent = 'コピーした'; setTimeout(()=>$('#copy').textContent='コピー',1200); })
+    .catch(() => { t.select(); document.execCommand('copy'); });
+});
+</script>
+</body>
+</html>
