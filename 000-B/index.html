@@ -472,7 +472,20 @@
     (() => {
       "use strict";
 
-      const DECK_PATH = "../deck.json";
+      const getDeckUrl = () => {
+        const currentUrl = new URL(window.location.href);
+        const opensHtmlFile = /\/[^/]+\.html?$/i.test(currentUrl.pathname);
+
+        if (!opensHtmlFile && !currentUrl.pathname.endsWith("/")) {
+          currentUrl.pathname += "/";
+        }
+
+        const pageDirectory = opensHtmlFile
+          ? new URL("./", currentUrl)
+          : currentUrl;
+
+        return new URL("../deck.json", pageDirectory);
+      };
       const elements = {
         drawButton: document.querySelector("#drawButton"),
         drawLabel: document.querySelector("#drawLabel"),
@@ -487,6 +500,7 @@
 
       let deck = null;
       let currentPrompt = "";
+      let drawCount = 0;
 
       const randomIndex = (length) => {
         if (!Number.isSafeInteger(length) || length <= 0) {
@@ -509,18 +523,41 @@
         return values[0] / 0x100000000 < rate;
       };
 
-      const assertDeck = (data) => {
-        const requiredArrays = ["modes", "materials", "lenses", "bans", "curses"];
-        const isValid = data
-          && requiredArrays.every((key) => Array.isArray(data[key]) && data[key].length > 0)
-          && typeof data.bossRate === "number"
-          && data.bossRate >= 0
-          && data.bossRate <= 1;
+      const normalizeDeck = (data) => {
+        const normalized = {
+          modes: data.modes ?? data.mode?.map((card) => ({
+            code: card.id,
+            label: card.label
+          })),
+          materials: data.materials ?? data.material,
+          lenses: data.lenses ?? data.lens?.map((card) => ({
+            code: card.group,
+            label: card.card
+          })),
+          bans: data.bans ?? data.ban,
+          curses: data.curses ?? data.curse,
+          bossRate: data.bossRate,
+          bossEvery: data.rules?.boss_every
+        };
 
-        if (!isValid) {
+        const requiredArrays = ["modes", "materials", "lenses", "bans", "curses"];
+        const hasCards = requiredArrays.every(
+          (key) => Array.isArray(normalized[key]) && normalized[key].length > 0
+        );
+        const hasBossRule = (
+          typeof normalized.bossRate === "number"
+          && normalized.bossRate >= 0
+          && normalized.bossRate <= 1
+        ) || (
+          Number.isSafeInteger(normalized.bossEvery)
+          && normalized.bossEvery > 0
+        );
+
+        if (!data || !hasCards || !hasBossRule) {
           throw new Error("deck.json の形式が正しくありません");
         }
-        return data;
+
+        return normalized;
       };
 
       const formatCard = (card) => {
@@ -546,7 +583,10 @@
       };
 
       const draw = () => {
-        const isBoss = chance(deck.bossRate);
+        drawCount += 1;
+        const isBoss = Number.isSafeInteger(deck.bossEvery)
+          ? drawCount % deck.bossEvery === 0
+          : chance(deck.bossRate);
         const result = {
           mode: pick(deck.modes),
           material: pick(deck.materials),
@@ -606,18 +646,20 @@
       };
 
       const loadDeck = async () => {
+        const deckUrl = getDeckUrl();
+
         try {
-          const response = await fetch(DECK_PATH, { cache: "no-store" });
+          const response = await fetch(deckUrl, { cache: "no-store" });
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
-          deck = assertDeck(await response.json());
+          deck = normalizeDeck(await response.json());
           elements.drawButton.disabled = false;
           elements.drawLabel.textContent = "DRAW TODAY'S PROMPT";
         } catch (error) {
           console.error(error);
           elements.drawLabel.textContent = "DECK NOT FOUND";
-          elements.status.textContent = "deck.jsonを読み込めなかった。Webサーバー経由で開いてね。";
+          elements.status.textContent = `deck.jsonを読み込めなかった（${deckUrl.pathname}）`;
         }
       };
 
